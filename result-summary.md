@@ -1,4 +1,4 @@
-<b> Innate (no documents provided)
+## Innate (no documents provided)
 
 RMSE                 : 230.14 kgCO2e/m2
 Mean absolute error  : 151.69 kgCO2e/m2
@@ -9,7 +9,7 @@ Inside: 100/292 = 34.2%   Wilson 95% CI [29.0%, 39.9%]
 ABOVE:  171/292 = 58.6%
 BELOW:  21/292 = 7.2%
 
-Domain
+## Domain
 
 RMSE                 : 200.14 kgCO2e/m2
 Mean absolute error  : 125.96 kgCO2e/m2
@@ -22,7 +22,7 @@ Inside: 132/292 = 45.2%   Wilson 95% CI [39.6%, 50.9%]
 ABOVE:  130/292 = 44.5%
 BELOW:  30/292 = 10.3%
 
-Ontology
+## Ontology
 
 RMSE                 : 231.27 kgCO2e/m2
 Mean absolute error  : 152.31 kgCO2e/m2
@@ -33,7 +33,7 @@ Inside: 102/292 = 34.9%   Wilson 95% CI [29.7%, 40.6%]
 ABOVE:  171/292 = 58.6%
 BELOW:  19/292 = 6.5%
 
-Domain + Ontology
+## Domain + Ontology
 
 RMSE                 : 199.78 kgCO2e/m2
 Mean absolute error  : 125.13 kgCO2e/m2
@@ -44,7 +44,7 @@ Inside: 134/292 = 45.9%   Wilson 95% CI [40.3%, 51.6%]
 ABOVE:  130/292 = 44.5%
 BELOW:  28/292 = 9.6%
 
-Domain + b]benchmark
+## Domain + Benchmark
 
 RMSE                 : 221.27 kgCO2e/m2
 Mean absolute error  : 143.72 kgCO2e/m2
