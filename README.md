@@ -1,6 +1,6 @@
-# LLM-Based Embodied Carbon Estimation for Early-Stage Building LCA
+# LLM-Based Embodied Carbon for Early-Stage Building LCA
 
-This project uses Gemini to estimate the A–C embodied carbon intensity (ECI, kgCO₂e/m²) of 292 buildings from early-stage metadata. Each building is estimated 10 times, and the estimates are compared against ground-truth LCA results.
+This project uses Gemini to test the A–C embodied carbon intensity (ECI, kgCO₂e/m²) of 292 buildings from early-stage metadata. Each building is estimated 10 times, and the estimates are compared against ground-truth LCA results.
 
 The requests are sent through the Gemini Batch API: all 2,920 calls are submitted as one job, which Google processes on its servers, at half the standard price.
 
