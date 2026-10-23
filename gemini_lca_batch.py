@@ -13,10 +13,10 @@ turnaround is 24 hours (often much faster). The jobs run on Google's side, so th
 be off between submit and collect.
 
 Steps
-  python gemini_lca_batch.py submit  --run-name no-background-pdfs     # build, upload, start job(s)
-  python gemini_lca_batch.py status  --run-name no-background-pdfs     # check progress
-  python gemini_lca_batch.py collect --run-name no-background-pdfs     # write results to CSVs
-  python gemini_lca_batch.py wait    --run-name no-background-pdfs     # check every 5 min, collect when done
+  python gemini_lca_batch.py submit  --run-name result-folder-name     # build, upload, start job(s)
+  python gemini_lca_batch.py status  --run-name result-folder-name     # check progress
+  python gemini_lca_batch.py collect --run-name result-folder-name     # write results to CSVs
+  python gemini_lca_batch.py wait    --run-name result-folder-name     # check every 5 min, collect when done
 
   submit also takes --projects ("all", "4", "1-20", "4,10,25-30"), --runs (default 10),
   and --dry-run (write the request files only, upload nothing).
@@ -52,17 +52,17 @@ load_dotenv()
 # --------------------------------------------------------------------------------------
 GEMINI_MODEL = "gemini-3.8-flash"
 TEMPERATURE = 1.0
-THINKING_LEVEL = "medium"          # "low" | "medium" | "high" | None (model default)
-MAX_OUTPUT_TOKENS = 16384          # includes thinking tokens
+THINKING_LEVEL = "medium"  # "low" | "medium" | "high" | None (model default)
+MAX_OUTPUT_TOKENS = 16384  # includes thinking tokens
 
 # --------------------------------------------------------------------------------------
 # Run settings - edit here
 # --------------------------------------------------------------------------------------
-RETRY_FAILED = False     # True -> submit also resends runs with parse_ok=False
-ONTOLOGY_MODE = "none"   # label written to the CSV column
-GEOMETRY_MODE = "none"   # label written to the CSV column
-MAX_FILE_MB = 1000       # split requests into files below this size (Google's limit is 2 GB)
-POLL_MINUTES = 5         # for "wait"
+RETRY_FAILED = False  # True -> submit also resends runs with parse_ok=False
+ONTOLOGY_MODE = "benchmarks"  # label written to the CSV column ("none" when the tables are off)
+GEOMETRY_MODE = "none"  # label written to the CSV column
+MAX_FILE_MB = 1000  # split requests into files below this size (Google's limit is 2 GB)
+POLL_MINUTES = 5  # for "wait"
 
 # --------------------------------------------------------------------------------------
 # Paths - all relative to the folder this script is in (CEE226-reference)
@@ -71,12 +71,13 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 
 BASE_DIR = SCRIPT_DIR
 GLOSSARY_PATH = BASE_DIR / "references" / "data_glossary_LLM.xlsx"
-BACKGROUND_PATHS = [BASE_DIR / "references" / f"{i}.pdf" for i in range(1, 6)]   # 1.pdf to 5.pdf
+BACKGROUND_PATHS = [BASE_DIR / "references" / f"{i}.pdf" for i in range(1, 5)]  # 1.pdf to 4.pdf
 PROCESS_PATH = BASE_DIR / "references" / "250524_CLF-LCA-Practice-Guide.txt"
 
 PROJECT_DIR = SCRIPT_DIR
 METADATA_PATH = PROJECT_DIR / "references" / "buildings_metadata_LLM.xlsx"
 RESULTS_ROOT = PROJECT_DIR / "results"
+BENCHMARK_PATH = BASE_DIR / "references" / "eci_benchmarks_A-C.md"
 
 MAX_PDF_CHARS = 100_000
 SYSTEM_PROMPT = "You are a building LCA expert."
@@ -92,6 +93,7 @@ THINKING_SETTING = f"level={THINKING_LEVEL}" if THINKING_LEVEL else "default"
 DONE_STATES = {"JOB_STATE_SUCCEEDED", "JOB_STATE_PARTIALLY_SUCCEEDED",
                "JOB_STATE_FAILED", "JOB_STATE_CANCELLED", "JOB_STATE_EXPIRED"}
 OK_STATES = {"JOB_STATE_SUCCEEDED", "JOB_STATE_PARTIALLY_SUCCEEDED"}
+
 
 # --------------------------------------------------------------------------------------
 # Readers
@@ -131,18 +133,22 @@ def read_txt(path: Path) -> str:
 #   build_building_prompt: the part that changes per building
 #   To include the background papers, uncomment the two lines in build_cached_prefix
 # --------------------------------------------------------------------------------------
-def build_cached_prefix(background_text: str, process_text: str, glossary_text: str) -> list[str]:
+def build_cached_prefix(background_text: str, process_text: str, glossary_text: str,
+                        benchmark_text: str) -> list[str]:
     """Identical for every request."""
     return [
         "Forget the information from previous sessions and calculate everything from the beginning.",
 
-        # "These journal papers contain background information about the early building LCA "
-        # f"process:\n\n{background_text}",
+        f"data_glossary_LLM contains feature names and descriptions for the data:\n\n{glossary_text}",
+
+        "These journal papers contain background information about the early building LCA "
+        f"process:\n\n{background_text}",
 
         # "This document contains a detailed practice guide on life cycle assessment of buildings "
         # f"focused on implementation. Use this guideline for LCA estimation:\n\n{process_text}",
 
-        f"data_glossary_LLM contains feature names and descriptions for the data:\n\n{glossary_text}",
+        "The following benchmark tables give published embodied carbon intensity (ECI) "
+        f"distributions. Use them as described in the notes below the tables:\n\n{benchmark_text}",
 
         "Reference the given feature information above. Estimate the embodied carbon value of the "
         "building below:\n\n",
@@ -268,7 +274,13 @@ def build_prefix() -> list[str]:
     glossary_text = read_excel_text(GLOSSARY_PATH)
     process_text = read_txt(PROCESS_PATH)
     background_text = "\n".join(read_pdf(p) for p in BACKGROUND_PATHS)
-    return build_cached_prefix(background_text, process_text, glossary_text)
+    benchmark_text = read_txt(BENCHMARK_PATH) if BENCHMARK_PATH.exists() else ""
+    prefix = build_cached_prefix(background_text, process_text, glossary_text,
+                                 benchmark_text or "<<BENCHMARK FILE MISSING>>")
+    # Stop instead of sending tables that are empty (only when the benchmark lines are switched on)
+    if any("<<BENCHMARK FILE MISSING>>" in part for part in prefix):
+        raise SystemExit(f"Benchmark lines are on, but {BENCHMARK_PATH} is missing or empty.")
+    return prefix
 
 
 def generation_config() -> dict:
@@ -361,7 +373,7 @@ def cmd_submit(args):
         m["jobs"].append({"job": job.name, "requests_file": f.name, "uploaded_file": up.name,
                           "state": job.state.name, "submitted": datetime.now().isoformat(timespec="seconds"),
                           "collected": False})
-        save_manifest(args.run_name, m)          # saved after every job, so nothing is lost
+        save_manifest(args.run_name, m)  # saved after every job, so nothing is lost
         print(f"  started {job.name}")
     print(f"Job list saved to {manifest_path(args.run_name)}")
     print(f"Check later with: python gemini_lca_batch.py status --run-name {args.run_name}")
@@ -455,7 +467,7 @@ def to_row(key: str, item: dict) -> tuple[str, int, dict, str]:
         "parse_ok": ok, "failure_type": ftype,
         "ontology_mode": ONTOLOGY_MODE, "geometry_mode": GEOMETRY_MODE,
         "finish_reason": fr, **tokens,
-        "latency_s": "",                       # not measured in batch mode
+        "latency_s": "",  # not measured in batch mode
         "model": GEMINI_MODEL, "temperature": TEMPERATURE, "thinking_setting": THINKING_SETTING,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
     }
@@ -465,7 +477,7 @@ def to_row(key: str, item: dict) -> tuple[str, int, dict, str]:
 def collect_job(c, j: dict, out: Path) -> tuple[int, int]:
     data = c.files.download(file=j["result_file"])
     local = out / "batch" / f"results_{j['requests_file']}"
-    local.write_bytes(data)                    # keep the raw batch output
+    local.write_bytes(data)  # keep the raw batch output
 
     by_project: dict[str, dict[int, dict]] = {}
     raw_dir = out / "raw"
@@ -506,7 +518,7 @@ def cmd_collect(args) -> bool:
             j["collected"] = True
             print(f"{j['requests_file']}: {n} results written, {n_fail} failed to parse")
         elif state in DONE_STATES:
-            j["collected"] = True              # nothing to collect; the runs stay missing
+            j["collected"] = True  # nothing to collect; the runs stay missing
             print(f"{j['requests_file']}: ended as {state}. Run 'submit' again to resend missing runs.")
         else:
             all_done = False
