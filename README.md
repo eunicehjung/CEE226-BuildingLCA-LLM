@@ -56,6 +56,5 @@ Results are written to `results/<run-name>/`. Model settings and prompts are at 
 
 ## Notes
 
-- Keep this repository **private**. The building data may come from industry collaborators, and the background papers are published articles.
 - `results/` and `.env` should not be uploaded. Add both to `.gitignore`.
 - Always use the same run name for submit, status, and collect. A new name resubmits, and is billed for, all 2,920 requests.
