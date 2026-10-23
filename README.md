@@ -12,7 +12,7 @@ For step-by-step instructions written for non-programmers, see **[Gemini_ECI_run
 |---|---|
 | `gemini_lca_batch.py` | Builds the prompts, submits the batch job, and collects the results |
 | `LLM-data-cleaning.py` | Summarizes a run: mean estimate per building, error, RMSE |
-| `make_fig1_bands.py` | ±20% band figure and inside / above / below counts |
+| `make_fig1_bands.py` | figure |
 | `ground_truth.csv` | True ECI per building |
 | `references/` | Building metadata, data glossary, LCA practice guide, background papers |
 | `Gemini_ECI_run_guide.pdf` | Full run guide |
@@ -43,11 +43,11 @@ Activate the environment, go to the project folder, and pick a run name (`yyyymm
 conda activate gemini
 cd CEE226-reference
 
-python gemini_lca_batch.py submit  --run-name 20261022_15_no-background   # 1. submit
-python gemini_lca_batch.py status  --run-name 20261022_15_no-background   # 2. check progress
-python gemini_lca_batch.py collect --run-name 20261022_15_no-background   #    collect when succeeded
-python LLM-data-cleaning.py 20261022_15_no-background                     # 4. summary table
-python make_fig1_bands.py   20261022_15_no-background                     # 5. band figure
+python gemini_lca_batch.py submit  --run-name result-folder-name   # 1. submit
+python gemini_lca_batch.py status  --run-name result-folder-name   # 2. check progress
+python gemini_lca_batch.py collect --run-name result-folder-name   # 3. collect when succeeded
+python LLM-data-cleaning.py result-folder-name                     # 4. summary table
+python make_fig1_bands.py   result-folder-name                     # 5. band figure
 ```
 
 To redo failed runs (step 3), set `RETRY_FAILED = True` in `gemini_lca_batch.py`, then submit and collect again with the same run name.
