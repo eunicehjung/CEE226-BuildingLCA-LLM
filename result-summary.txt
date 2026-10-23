@@ -1,0 +1,58 @@
+<b> Innate (no documents provided)
+
+RMSE                 : 230.14 kgCO2e/m2
+Mean absolute error  : 151.69 kgCO2e/m2
+SD within project    : 26.25 (mean of per-project SDs)
+SD across projects   : truth 253.57 | estimate 125.77
+
+Inside: 100/292 = 34.2%   Wilson 95% CI [29.0%, 39.9%]
+ABOVE:  171/292 = 58.6%
+BELOW:  21/292 = 7.2%
+
+Domain
+
+RMSE                 : 200.14 kgCO2e/m2
+Mean absolute error  : 125.96 kgCO2e/m2
+Mean ratio est/true  : 0.90
+SD within project    : 21.71 (mean of per-project SDs)
+SD across projects   : truth 253.57 | estimate 142.50
+Range across projects: truth 13.47-2160.11 (span 2146.64) | estimate 32.10-893.50 (span 861.40)
+
+Inside: 132/292 = 45.2%   Wilson 95% CI [39.6%, 50.9%]
+ABOVE:  130/292 = 44.5%
+BELOW:  30/292 = 10.3%
+
+Ontology
+
+RMSE                 : 231.27 kgCO2e/m2
+Mean absolute error  : 152.31 kgCO2e/m2
+SD within project    : 24.07 (mean of per-project SDs)
+SD across projects   : truth 253.57 | estimate 125.25
+
+Inside: 102/292 = 34.9%   Wilson 95% CI [29.7%, 40.6%]
+ABOVE:  171/292 = 58.6%
+BELOW:  19/292 = 6.5%
+
+Domain + Ontology
+
+RMSE                 : 199.78 kgCO2e/m2
+Mean absolute error  : 125.13 kgCO2e/m2
+SD within project    : 21.57 (mean of per-project SDs)
+SD across projects   : truth 253.57 | estimate 142.95
+
+Inside: 134/292 = 45.9%   Wilson 95% CI [40.3%, 51.6%]
+ABOVE:  130/292 = 44.5%
+BELOW:  28/292 = 9.6%
+
+Domain + b]benchmark
+
+RMSE                 : 221.27 kgCO2e/m2
+Mean absolute error  : 143.72 kgCO2e/m2
+Mean ratio est/true  : 0.89
+SD within project    : 22.03 (mean of per-project SDs)
+SD across projects   : truth 253.57 | estimate 128.84
+Range across projects: truth 13.47-2160.11 (span 2146.64) | estimate 32.05-715.50 (span 683.45)
+
+Inside: 106/292 = 36.3%   Wilson 95% CI [31.0%, 42.0%]
+ABOVE:  150/292 = 51.4%
+BELOW:  36/292 = 12.3%
